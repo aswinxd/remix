@@ -11,7 +11,7 @@ BOT_TOKEN = "1710500911:AAGbfJaizS8PsGAds-9ZWTSgbc3B2zTI8OI"
 app = Client("music_editor", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 
-THUMBNAIL_URL = "https://envs.sh/ENC.jpg"
+THUMBNAIL_URL = "photo_2025-02-14_00-48-54.jpg"
 user_files = {}  # Dictionary to store user file paths
 
 # Function to apply effects
