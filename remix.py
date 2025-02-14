@@ -13,7 +13,9 @@ app = Client("music_editor", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOK
 
 
 THUMBNAIL_URL = "https://envs.sh/ENC.jpg"
+user_files = {}  # Dictionary to store user file paths
 
+# Function to apply effects
 def apply_audio_effect(input_file, output_file, effect):
     filters = {
         "slow_reverb": "atempo=0.85, aecho=0.8:0.88:60:0.4",
@@ -25,16 +27,24 @@ def apply_audio_effect(input_file, output_file, effect):
         "increase_volume": "volume=2.0"
     }
     if effect in filters:
-        ffmpeg.input(input_file).output(output_file, af=filters[effect]).run(overwrite_output=True)
+        try:
+            ffmpeg.input(input_file).output(output_file, af=filters[effect]).run(overwrite_output=True)
+        except ffmpeg.Error as e:
+            print(f"FFmpeg error: {e}")
+            return None
 
-
+# Start Command
 @app.on_message(filters.command("start"))
 def start(_, message):
     message.reply_text("Send me a music file to edit! 🎵")
 
-
+# Handle Audio Files
 @app.on_message(filters.audio | filters.voice)
 def handle_audio(_, message):
+    file_path = message.download()  # Download the audio file
+    user_id = message.chat.id
+    user_files[user_id] = file_path  # Store the file path for later processing
+
     buttons = [
         [InlineKeyboardButton("🎧 Slow Reverb", callback_data="slow_reverb"),
          InlineKeyboardButton("⚡ Fast Reverb", callback_data="fast_reverb")],
@@ -50,27 +60,32 @@ def handle_audio(_, message):
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-
-    file_path = message.download()
-
-
-    message.chat.id, file_path
-
-
+# Callback for Effects
 @app.on_callback_query()
 def callback_query(client, query):
     effect = query.data
     user_id = query.message.chat.id
-    input_file = f"{user_id}.mp3"
-    output_file = f"{user_id}_edited.mp3"
 
+    if user_id not in user_files:
+        query.message.edit_text("❌ No music file found. Please send a new file.")
+        return
+
+    input_file = user_files[user_id]
+    output_file = f"{input_file}_edited.mp3"
+
+    if not os.path.exists(input_file):
+        query.message.edit_text("❌ Error: File not found. Try again.")
+        return
+
+    query.message.edit_text(f"🔄 Processing {effect}... Please wait.")
 
     apply_audio_effect(input_file, output_file, effect)
 
+    if os.path.exists(output_file):
+        query.message.reply_audio(audio=output_file, caption=f"Here is your {effect} version! 🎶")
+        os.remove(output_file)
+    else:
+        query.message.edit_text("❌ Failed to process the audio. Try again.")
 
-    query.message.reply_audio(audio=output_file, thumb=THUMBNAIL_URL, caption=f"Here is your {effect} version! 🎶")
-
-    os.remove(input_file)
-    os.remove(output_file)
-
+# Run the bot
 app.run()
