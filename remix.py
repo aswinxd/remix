@@ -67,14 +67,14 @@ def callback_query(client, query):
     user_id = query.message.chat.id
 
     if user_id not in user_files:
-        query.message.edit_text("❌ No music file found. Please send a new file.")
+        query.answer("❌ No music file found. Please send a new file.")
         return
 
     input_file = user_files[user_id]
     output_file = f"{input_file}_edited.mp3"
 
     if not os.path.exists(input_file):
-        query.message.edit_text("❌ Error: File not found. Try again.")
+        query.answer("❌ Error: File not found. Try again.")
         return
 
     query.message.edit_text(f"🔄 Processing {effect}... Please wait.")
@@ -82,10 +82,17 @@ def callback_query(client, query):
     apply_audio_effect(input_file, output_file, effect)
 
     if os.path.exists(output_file):
-        query.message.reply_audio(audio=output_file, caption=f"Here is your {effect} version! 🎶")
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        caption = (f"✅ **Effect Applied:** {effect.replace('_', ' ').title()}\n"
+                   f"🆔 **Requested by:** {query.from_user.first_name}\n"
+                   f"📅 **Date & Time:** {now}")
+
+        query.message.reply_audio(audio=output_file, caption=caption, thumb=THUMBNAIL_URL,
+                                  reply_markup=query.message.reply_markup)  # Keeps buttons
         os.remove(output_file)
     else:
         query.message.edit_text("❌ Failed to process the audio. Try again.")
+
 
 # Run the bot
 app.run()
