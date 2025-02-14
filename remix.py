@@ -76,7 +76,7 @@ def callback_query(client, query):
         query.answer("❌ Error: File not found. Try again.")
         return
 
-    query.reply_text(f"🔄 Processing {effect}... Please wait.")
+    query.message.reply(f"🔄 Processing {effect}... Please wait.")
 
     apply_audio_effect(input_file, output_file, effect)
 
