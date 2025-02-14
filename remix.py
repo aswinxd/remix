@@ -40,8 +40,9 @@ def start(_, message):
 # Handle Audio Files
 @app.on_message(filters.audio | filters.voice)
 def handle_audio(_, message):
-    file_path = message.download()  
-    user_files[user_id] = file_path  
+    file_path = message.download()  # Download the audio file
+    user_id = message.chat.id
+    user_files[user_id] = file_path 
 
     buttons = [
         [InlineKeyboardButton("🎧 Slow Reverb", callback_data="slow_reverb"),
