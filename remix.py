@@ -3,8 +3,7 @@ import ffmpeg
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from PIL import Image
-
-
+import datetime
 API_ID = "12799559"
 API_HASH = "077254e69d93d08357f25bb5f4504580"
 BOT_TOKEN = "1710500911:AAGbfJaizS8PsGAds-9ZWTSgbc3B2zTI8OI"
@@ -41,9 +40,8 @@ def start(_, message):
 # Handle Audio Files
 @app.on_message(filters.audio | filters.voice)
 def handle_audio(_, message):
-    file_path = message.download()  # Download the audio file
-    user_id = message.chat.id
-    user_files[user_id] = file_path  # Store the file path for later processing
+    file_path = message.download()  
+    user_files[user_id] = file_path  
 
     buttons = [
         [InlineKeyboardButton("🎧 Slow Reverb", callback_data="slow_reverb"),
@@ -60,7 +58,7 @@ def handle_audio(_, message):
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-# Callback for Effects
+
 @app.on_callback_query()
 def callback_query(client, query):
     effect = query.data
@@ -77,7 +75,7 @@ def callback_query(client, query):
         query.answer("❌ Error: File not found. Try again.")
         return
 
-    query.message.edit_text(f"🔄 Processing {effect}... Please wait.")
+    query.message.send(f"🔄 Processing {effect}... Please wait.")
 
     apply_audio_effect(input_file, output_file, effect)
 
